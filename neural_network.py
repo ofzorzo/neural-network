@@ -27,10 +27,11 @@ class NeuralNetwork:
     
     # obtém saídas correspondentes a uma entrada
     def propagate (self, instance):
-        layer_entry = np.matrix(instance).transpose() # valores de entrada para a camada sendo 
-                                                      # a entrada da rede na primeira camada ou
-                                                      # a ativação das camadas anteriores para 
-                                                      # as demais camadas.
+        # adiciona bias
+        layer_entry = np.matrix([1] + instance).transpose() # valores de entrada para a camada sendo 
+                                                            # a entrada da rede na primeira camada ou
+                                                            # a ativação das camadas anteriores para 
+                                                            # as demais camadas.
         print ("Entrada da rede para a camada 0: \n" + str(layer_entry))
         for layer in range(len(self.thetas) - 1):                    # para cada matriz de pesos theta entre duas camadas
             layer_entry = g(self.thetas[layer] * layer_entry)
@@ -50,11 +51,11 @@ s = {
 }
 
 w = [
-        # layer 1 ( 3 x 2 ) # não precisa considerar o bias pois sua ativação é sempre 1
+        # layer 1 ( 3 x 3 ) # primeira coluna são os pesos do bias
         np.matrix([ 
-            [0.5, 0.8],
-            [0.1, 0.7],
-            [0.6, 0.2]
+            [0.1, 0.5, 0.8],
+            [0.9, 0.1, 0.7],
+            [0.4, 0.6, 0.2]
         ]),
         # layer 2 ( 1 x 4 ) # precisa considerar o bias, seu peso corresponde a primeira coluna
         np.matrix(
