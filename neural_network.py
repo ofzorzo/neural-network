@@ -23,6 +23,7 @@ class NeuralNetwork:
         self.deltas = self.init_activations()
         self.layers = len(self.struct['neurons'])
         self.alpha = 0.1
+        self.max_iterations = 1
 
     def init_activations(self):
         activations = []
@@ -30,66 +31,79 @@ class NeuralNetwork:
             activations.append([0 for i in range (layer_size)] )
         return activations
 
-    
-    
-    
+    def stop_condition(self, i, prev_thetas):
+        if i == 0: # primeira iteração, precisa dessa condição pois o valor de prev_theta será None
+            return False
+        else:
+            # realiza o backpropagation até atingir o limite máximo de iterações ou até os thetas pararem
+            # de mudar
+            return i >= self.max_iterations or self.thetas == prev_thetas 
+
+    # Considera um conjunto de treinamento formado por uma lista de pares do tipo:
+    # (entradas, saídas esperadas), onde ambos os elementos são listas de valores inteiros
     def backpropagation (self, train):
-        Grad = [ [] for i in range(self.layers - 1)] # gradiente acumulado dos exemplos
-        print ("Calculando erro da rede: ")
-        for sample in train:
-            print ("\n")
-            print ("Processando entrada " + str(sample[0]))
-            predicted = self.propagate(sample[0])
+        iter = 0
+        prev_theta = None
+        while (not self.stop_condition(iter, prev_theta)):
+            prev_theta = self.thetas[:] # copia por valor a matriz dos thetas
+            iter+=1
+            print ("Iteration " + str(iter) + ":") 
+            Grad = [ [] for i in range(self.layers - 1)] # gradiente acumulado dos exemplos
+            print ("Calculando erro da rede: ")
+            for sample in train:
+                print ("\n")
+                print ("Processando entrada " + str(sample[0]))
+                predicted = self.propagate(sample[0])
+                print("")
+                for l in range(len(self.a)):
+                    print ("Ativação da camada " + str(l) + ":\n" + str(self.a[l].tolist()))
+                print("")
+                print ("Predicted = \n" + str(predicted))
+                print ("Expected = \n" + str(sample[1]))
+                expected = np.matrix(sample[1]).transpose()
+                self.deltas[self.layers-1] = predicted - expected
+                for k in range(self.layers-2, 0, -1):
+                    temp = (self.thetas[k].transpose() * self.deltas[k+1])
+                    temp = element_wise_mult(temp, self.a[k])
+                    temp = element_wise_mult(temp, 1 - self.a[k])
+                    self.deltas[k] = temp[1:] # não conta o delta do bias
+                
+                print("")
+                for l in range(len (self.deltas) - 1, 0, -1):
+                    print ("Deltas " + str(l + 1) + ":\n" + str(self.deltas[l])) 
+                
+                grad_inp = [ [] for i in range(self.layers - 1) ]  # gradiente para um exemplo
+                for k in range(self.layers-2, -1, -1):
+
+                    grad_inp[k] = self.deltas[k+1] * self.a[k].transpose()
+                    #acumula gradiente
+                    if len(Grad[k]) == 0: # primeiro exemplo
+                        Grad[k] = grad_inp[k]
+                    else:
+                        Grad[k] = [Grad[k][i] + grad_inp[k][i]  for i in range(len(grad_inp[k]))] 
+                
+                print("")
+                for l in range(len(grad_inp)-1, -1, -1):
+                    print ("Gradientes para theta" + str(l+1) + " da entrada:\n" + str(grad_inp[l]))
+                
             print("")
-            for l in range(len(self.a)):
-                print ("Ativação da camada " + str(l) + ":\n" + str(self.a[l].tolist()))
-            print("")
-            print ("Predicted = \n" + str(predicted))
-            print ("Expected = \n" + str(sample[1]))
-            expected = np.matrix(sample[1]).transpose()
-            self.deltas[self.layers-1] = predicted - expected
-            for k in range(self.layers-2, 0, -1):
-                temp = (self.thetas[k].transpose() * self.deltas[k+1])
-                temp = element_wise_mult(temp, self.a[k])
-                temp = element_wise_mult(temp, 1 - self.a[k])
-                self.deltas[k] = temp[1:] # não conta o delta do bias
             
-            print("")
-            for l in range(len (self.deltas) - 1, 0, -1):
-                print ("Deltas " + str(l + 1) + ":\n" + str(self.deltas[l])) 
-            
-            grad_inp = [ [] for i in range(self.layers - 1) ]  # gradiente para um exemplo
             for k in range(self.layers-2, -1, -1):
-
-                grad_inp[k] = self.deltas[k+1] * self.a[k].transpose()
-                #acumula gradiente
-                if len(Grad[k]) == 0: # primeiro exemplo
-                    Grad[k] = grad_inp[k]
-                else:
-                    Grad[k] = [Grad[k][i] + grad_inp[k][i]  for i in range(len(grad_inp[k]))] 
+                P = self.struct['lambda'] * self.thetas[k]
+                # faz primeira coluna ficar em zeros -> não penalizar bias
+                for i in range(len(P)):
+                    P[i,0] = 0
+                Grad[k] = (1/len(train)) * np.array([Grad[k][i] + P[i] for i in range(len(P))])
             
-            print("")
-            for l in range(len(grad_inp)-1, -1, -1):
-                print ("Gradientes para theta" + str(l+1) + " da entrada:\n" + str(grad_inp[l]))
+            for l in range(len(Grad)):
+                print ("Gradientes acumulados (com regularização) para theta" + str(l+1) + ":\n" + str(Grad[l]))
             
-        print("")
-        
-        for k in range(self.layers-2, -1, -1):
-            P = self.struct['lambda'] * self.thetas[k]
-            # faz primeira coluna ficar em zeros -> não penalizar bias
-            for i in range(len(P)):
-                P[i,0] = 0
-            Grad[k] = (1/len(train)) * np.array([Grad[k][i] + P[i] for i in range(len(P))])
-        
-        for l in range(len(Grad)):
-            print ("Gradientes acumulados (com regularização) para theta" + str(l+1) + ":\n" + str(Grad[l]))
-        
 
-        for k in range(self.layers-2, -1 , -1):
-            self.thetas[k] = np.matrix(self.thetas[k]) - np.matrix(self.alpha * Grad[k])
+            for k in range(self.layers-2, -1 , -1):
+                self.thetas[k] = np.matrix(self.thetas[k]) - np.matrix(self.alpha * Grad[k])
 
-        for t in range (len(self.thetas)):
-            print ("Novo theta " + str(t+1) +" com alpha " + str(self.alpha) + ":\n" + str(self.thetas[t]))
+            for t in range (len(self.thetas)):
+                print ("Novo theta " + str(t+1) +" com alpha " + str(self.alpha) + ":\n" + str(self.thetas[t]))
             
 
     # obtém saídas correspondentes a uma entrada
