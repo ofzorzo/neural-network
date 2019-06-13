@@ -44,6 +44,55 @@ def create_neural_network(network, weights, dataset):
         #print(train)
     return s, w, train
 
+def print_network_parameters(s, w, train):
+    print("Parametro de regularizacao lambda=" + "{:.3f}".format(s['lambda']))
+    print("")
+    print("Inicializando rede com a seguinte estrutura de neuronios por camada: [", end="")
+    first = True
+    for n in s['neurons']:
+        if first:
+            first = False
+            print(n, end="")
+        else:
+            print(" ", end="")
+            print(n, end="")
+    print("]")
+    print("")
+    for k in range(0, len(w)):
+        print("Theta" + str(k+1) + " inicial (pesos de cada neuronio, incluindo bias, armazenados nas linhas):")
+        for i in range(0, len(w[k])):
+            print("\t\t", end="")
+            for j in range(0, w[k][i].size):
+                print("{:.5f}".format(w[k][i, j]), end=" ")
+            print("")
+        print("")
+    print("")
+    print("Conjunto de treinamento")
+    exemplo = 1
+    for instance in train:
+        print("\tExemplo " + str(exemplo))
+        print("\t\tx: [", end="")
+        first = True
+        for x in instance[0]:
+            if first:
+                print("{:.5f}".format(x), end="")
+                first = False
+            else:                
+                print("   {:.5f}".format(x), end="")
+        print("]")
+        print("\t\ty: [", end="")
+        first = True
+        for y in instance[1]:            
+            if first:
+                print("{:.5f}".format(y), end="")
+                first = False
+            else:
+                print("   {:.5f}".format(y), end="")
+        print("]")
+        exemplo += 1
+    print("")
+    print("--------------------------------------------")
+
 def main():
     parser = argparse.ArgumentParser(description="Neural network")
 
@@ -59,8 +108,9 @@ def main():
     args = parser.parse_args()
 
     s, w, train = create_neural_network(args.files[0], args.files[1], args.files[2])
+    print_network_parameters(s, w, train)
     network = nn.NeuralNetwork(s, w, args.epsilon)
-    network.backpropagation(train)
+    #network.backpropagation(train)
     #network.print_network()
     if(args.numerical_verification):
         numerical_gradients = network.compute_numerical_verification(train)

@@ -224,4 +224,5 @@ class NeuralNetwork:
                     print("{:.5f}".format(numerical_gradients[k][i, j]), end=" ")
                 print("")
             print("")
+        print("")
         print("--------------------------------------------")
