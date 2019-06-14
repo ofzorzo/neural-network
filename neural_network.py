@@ -167,11 +167,9 @@ class NeuralNetwork:
                     else:
                         reg_n = reg_n + pow(self.thetas_numerical[k2][i2,j2], 2)
                         reg_p = reg_p + pow(self.thetas_numerical[k2][i2,j2], 2)
-        return reg_p, reg_n
-                        
+        return reg_p, reg_n                        
 
     def propagate_numerical(self, instance, thetas, k, i, j, op):
-        # adiciona bias
         self.a_numerical[0] = np.matrix([1] + instance).transpose()
         if op == "+":
             thetas[k][i,j] = thetas[k][i,j] + self.epsilon
@@ -181,21 +179,6 @@ class NeuralNetwork:
             self.a_numerical[layer + 1] = g(thetas[layer] * self.a_numerical[layer])
             self.a_numerical[layer + 1] = np.matrix([[1]] + self.a_numerical[layer + 1].tolist())               
         self.a_numerical[self.layers-1] = g(thetas[self.layers - 2] * self.a_numerical[self.layers - 2])
-        if op == "+":
-            thetas[k][i,j] = thetas[k][i,j] - self.epsilon
-        elif op == "-":
-            thetas[k][i,j] = thetas[k][i,j] + self.epsilon
-        return self.a_numerical[self.layers-1]
-
-    def propagate_numerical_without_bias(self, instance, thetas, k, i, j, op):
-        if op == "+":
-            thetas[k][i,j] = thetas[k][i,j] + self.epsilon
-        elif op == "-":
-            thetas[k][i,j] = thetas[k][i,j] - self.epsilon
-        self.a_numerical[0] = np.matrix(instance).transpose()
-        for layer in range(len(thetas) - 1):                   
-            self.a_numerical[layer + 1] = g(thetas[layer] * self.a_numerical[layer])                 
-        self.a_numerical[self.layers-1] = g(thetas[self.layers - 2] * self.a_numerical[self.layers - 2])         
         if op == "+":
             thetas[k][i,j] = thetas[k][i,j] - self.epsilon
         elif op == "-":
