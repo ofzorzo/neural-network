@@ -18,11 +18,6 @@ def get_categories(dataset, predicted_index):
 
     return columnValues, numberOfInstances
 
-def minmax_normalize(instances):
-    scaler = MinMaxScaler()
-    scaler.fit(instances)
-    return scaler.transform(instances)
-
 def create_neural_network(network, weights, dataset):
     with open(network) as network:
         lambda_val = float(network.readline().split()[0])
@@ -129,8 +124,8 @@ def create_train_set(data, predicted_index, drop_col, drop_row, standard_normali
         instances_atributes.append(x.iloc[i, : ].tolist())
 
     scaler = MinMaxScaler()
-    scaler.fit(instances)
-    normalized_instances = scaler.transform(instances)
+    scaler.fit(instances_atributes)
+    normalized_instances = scaler.transform(instances_atributes)
 
     for i in range(len(data)):
         instance = []
@@ -228,6 +223,7 @@ def cross_validation(dataset_file, predictionIndex, k, drop_col, drop_row, stand
             if fold_index != test_fold_index:
                 training_data = training_data.append(fold)
         
+        print("k-fold #%d" % test_fold_index)
         train = create_train_set(training_data, predictionIndex, drop_col, drop_row, standard_normalization, dataset)
         s = create_network_structure(network_structure, train) # aqui o número de neurônios da primeira camada é calculado automaticamente, com base no número de atributos do dataset
         w = create_initial_weights(s)
@@ -351,13 +347,16 @@ def main():
         elif args.dataset == 'iono':
             dataset = 'iono'
             dataset_file = 'datasets/ionosphere.data'
+        else:
+            print("Esse dataset não está configurado")
+            exit()
         train = cross_validation(dataset_file, args.predicted_index, args.folds_number, None, None, args.standard_normalization, args.network_structure, args.epsilon, dataset)
 
     else: # caso contrário, o dataset está no formato da descrição do trabalho
         s, w, train = create_neural_network(args.network_structure, args.initial_weights, args.dataset) # aquio o número de neurônios da primeira camada é de acordo com o .txt, pra ficar de acordo com os exemplos deles
         print_network_parameters(s, w, train)
         network = nn.NeuralNetwork(s, w, args.epsilon)
-        network.backpropagation(train)
+        network.backpropagation_with_prints(train)
         network.print_network()
         if(args.numerical_verification):
             numerical_gradients = network.compute_numerical_verification(train)

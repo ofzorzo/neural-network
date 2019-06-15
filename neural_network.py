@@ -23,8 +23,9 @@ class NeuralNetwork:
         self.a = self.init_activations()
         self.deltas = self.init_activations()
         self.layers = len(self.struct['neurons'])
-        self.alpha = 0.1
-        self.max_iterations = 1
+        self.alpha = 0.8
+        self.max_iterations = 30
+        self.batch_size = 10
         self.thetas_numerical = copy.deepcopy(self.thetas)
         self.a_numerical = copy.deepcopy(self.a)        
         self.epsilon = epsilon
@@ -41,17 +42,18 @@ class NeuralNetwork:
         else:
             # realiza o backpropagation até atingir o limite máximo de iterações ou até os thetas pararem
             # de mudar
-            return i >= self.max_iterations or self.thetas == prev_thetas 
+            print(i)
+            return i >= self.max_iterations or np.array_equal(self.thetas, prev_thetas)
 
     # Considera um conjunto de treinamento formado por uma lista de pares do tipo:
     # (entradas, saídas esperadas), onde ambos os elementos são listas de valores inteiros
-    def backpropagation(self, train):
-        iter = 0
+    def backpropagation_with_prints(self, train):
+        itera = 0
         prev_theta = None
-        while (not self.stop_condition(iter, prev_theta)):
+        while (not self.stop_condition(itera, prev_theta)):
             prev_theta = self.thetas[:] # copia por valor a matriz dos thetas
-            iter+=1
-            print ("Iteration " + str(iter) + ":") 
+            itera+=1
+            print ("Iteration " + str(itera) + ":") 
             Grad = [ [] for i in range(self.layers - 1)] # gradiente acumulado dos exemplos
             print ("Calculando erro da rede: ")
             for sample in train:
@@ -110,7 +112,56 @@ class NeuralNetwork:
         
             print("\n--------------------------------------------")
         return Grad
-            
+    
+    # Considera um conjunto de treinamento formado por uma lista de pares do tipo:
+    # (entradas, saídas esperadas), onde ambos os elementos são listas de valores inteiros
+    def backpropagation(self, train):
+        itera = 0
+        prev_theta = None
+        while (not self.stop_condition(itera, prev_theta)):
+            prev_theta = self.thetas[:] # copia por valor a matriz dos thetas
+            itera+=1
+            print ("Iteration " + str(itera) + ":") 
+            Grad = [ [] for i in range(self.layers - 1)] # gradiente acumulado dos exemplos
+            num_samples = 0
+            for sample in train:
+                predicted = self.propagate(sample[0])
+                expected = np.matrix(sample[1]).transpose()
+                self.deltas[self.layers-1] = predicted - expected
+                for k in range(self.layers-2, 0, -1):
+                    temp = (self.thetas[k].transpose() * self.deltas[k+1])
+                    temp = element_wise_mult(temp, self.a[k])
+                    temp = element_wise_mult(temp, 1 - self.a[k])
+                    self.deltas[k] = temp[1:] # não conta o delta do bias
+                
+                grad_inp = [ [] for i in range(self.layers - 1) ]  # gradiente para um exemplo
+                for k in range(self.layers-2, -1, -1):
+                    grad_inp[k] = self.deltas[k+1] * self.a[k].transpose()
+                    #acumula gradiente
+                    if len(Grad[k]) == 0: # primeiro exemplo
+                        Grad[k] = grad_inp[k]
+                    else:
+                        Grad[k] = [Grad[k][i] + grad_inp[k][i]  for i in range(len(grad_inp[k]))] 
+                
+                num_samples +=1
+
+                if num_samples == self.batch_size:
+                    for k in range(self.layers-2, -1, -1):
+                        P = self.struct['lambda'] * self.thetas[k]
+                        # faz primeira coluna ficar em zeros -> não penalizar bias
+                        for i in range(len(P)):
+                            P[i,0] = 0
+                        Grad[k] = (1/len(train)) * np.array([Grad[k][i] + P[i] for i in range(len(P))])
+                    
+                    for k in range(self.layers-2, -1, -1):
+                        self.thetas[k] = np.matrix(self.thetas[k]) - np.matrix(self.alpha * Grad[k])
+
+                    Grad = [ [] for i in range(self.layers - 1)] # gradiente acumulado dos exemplos
+
+                    num_samples = 0
+
+            print("\n--------------------------------------------")
+        return Grad
 
     # obtém saídas correspondentes a uma entrada
     def propagate(self, instance):
