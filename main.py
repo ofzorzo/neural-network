@@ -8,20 +8,25 @@ from sklearn import preprocessing
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import StandardScaler
 
+
+def get_categories(dataset, predicted_index):
+    print(dataset)
+    columnName = dataset.columns[predicted_index] # nome da coluna a ser predita
+    column = dataset[columnName]                  # pega todos os dados da coluna
+    columnValues = column.unique()             # separa cada valor único da coluna
+    numberOfInstances = dict(column.value_counts())
+
+    return columnValues, numberOfInstances
+
 def minmax_normalize(instances):
     scaler = MinMaxScaler()
-    scaler.fit(instances)
-    print(scaler.data_max_)
-    return scaler.transform(instances)
-
-def standard_normalize(instances):
-    scaler = StandardScaler()
     scaler.fit(instances)
     return scaler.transform(instances)
 
 def create_neural_network(network, weights, dataset):
     with open(network) as network:
         lambda_val = float(network.readline().split()[0])
+        print(lambda_val)
         neurons = []
         for line in network:
             neurons.append(int(line))
@@ -111,8 +116,7 @@ def print_network_parameters(s, w, train):
     print("--------------------------------------------")
 
 #assume que só tem um valor a ser previsto
-def create_train_set(dataset, predicted_index, drop_col, drop_row):
-    data = pd.read_csv(dataset, delimiter=',', header=None)
+def create_train_set(data, predicted_index, drop_col, drop_row, standard_normalization,dataset):
     if drop_col != None:
         data = data.drop(columns=[drop_col])
     if drop_row != None:
@@ -124,17 +128,31 @@ def create_train_set(dataset, predicted_index, drop_col, drop_row):
     for i in range(len(data)):
         instances_atributes.append(x.iloc[i, : ].tolist())
 
-    if standard_normalize:
-        normalized_instances = standard_normalize(instances_atributes)
-    else:
-        normalized_instances = minmax_normalize(instances_atributes)
+    scaler = MinMaxScaler()
+    scaler.fit(instances)
+    normalized_instances = scaler.transform(instances)
 
     for i in range(len(data)):
         instance = []
         instance.append(normalized_instances[i].tolist())
-        instance.append(y.iloc[i, : ].tolist())
-        train.append(instance)
+        if dataset == 'wine':
+            expected_output = np.zeros(3)
+            expected_output[y.iloc[i, : ]-1] = 1
+        elif dataset == 'pima':
+            expected_output = np.zeros(2)
+            expected_output[y.iloc[i, : ]] = 1
+        elif dataset == 'iono':
+            expected_output = np.zeros(2)
+            if y.iloc[i, : ].tolist()[0] == 'b':
+                expected_output[0] = 1            
+            else:
+                expected_output[1] = 1
+        else:
+            expected_output = np.zeros(1)
 
+        instance.append(expected_output.tolist())
+        train.append(instance)
+    
     return train
 
 def create_network_structure(network, train):
@@ -166,6 +184,128 @@ def create_initial_weights(s):
         w.append(layer)
     return w
 
+def cross_validation(dataset_file, predictionIndex, k, drop_col, drop_row, standard_normalization, network_structure, epsilon, dataset):
+    if dataset == 'pima':
+        data = pd.read_csv(dataset_file, delimiter='\t', header=None)
+    else:
+        data = pd.read_csv(dataset_file, delimiter=',', header=None)
+    categories, numberOfInstances = get_categories(data, predictionIndex)
+
+    predictionColumnName = data.columns[predictionIndex]
+    data_split_per_category = {}
+
+    for category in categories:
+        data_split_per_category[category] = data[data[predictionColumnName]==category]
+
+    k_folds = [pd.DataFrame()] * k
+    fscore = []
+
+    # dividindo os folds estratificados
+    for i in range(k):
+        for category in categories:
+            num_sample = numberOfInstances[category]//k
+            sample = data_split_per_category[category].sample(n=num_sample)
+            k_folds[i] = k_folds[i].append(sample)
+            data_split_per_category[category] = data_split_per_category[category].drop(sample.index)
+
+    # adicionando as instâncias que sobraram por categoria uma em cada fold (pra não ficar muito desparelha a quantidade total de instancias)
+    instances_rest = pd.DataFrame()
+    for category, data in data_split_per_category.items():
+        instances_rest = instances_rest.append(data)
+
+    fold_index = 0
+    for i in range(len(instances_rest.index)):
+        fold_index %= k
+        k_folds[fold_index] = k_folds[fold_index].append(instances_rest.iloc[[i]])
+        fold_index += 1
+
+
+    # rodando cross-validation de fato
+    for test_fold_index, testing_data in enumerate(k_folds):
+        #agrupando folds restantes em um dataframe só
+        training_data = pd.DataFrame()
+        for fold_index, fold in enumerate(k_folds):
+            if fold_index != test_fold_index:
+                training_data = training_data.append(fold)
+        
+        train = create_train_set(training_data, predictionIndex, drop_col, drop_row, standard_normalization, dataset)
+        s = create_network_structure(network_structure, train) # aqui o número de neurônios da primeira camada é calculado automaticamente, com base no número de atributos do dataset
+        w = create_initial_weights(s)
+
+        network = nn.NeuralNetwork(s, w, epsilon)
+        network.backpropagation(train)
+        
+        # classifica cada instancia usando o ensemble que acabou de aprender
+        results = []
+        test = create_train_set(testing_data, predictionIndex, drop_col, drop_row, standard_normalization, dataset)
+        for instance in test:
+            instance_classification = network.propagate(instance[0])
+            results += [[instance[1], [x[0] for x in instance_classification.tolist()]]]
+
+        
+        # print(results)
+        fscore += [Fmeasure(results, categories)]
+    
+    print("F-Score average = %f" % np.mean(fscore))
+    print("F-Score deviation = %f" % np.std(fscore))
+
+def Fmeasure(results, categories, beta=1, score_mode='micro'):
+    VPac = VNac = FPac = FNac = 0 # valores acumulados para todas as classes, a ser utilizado no caso de score_mode = micro média 
+    all_precision = []
+    all_recall = [] # resultados de precisão e recall para cada classe, a ser utilizado no caso de score_mode = macro média
+    # Tratamento multiclasse realizado independentemente da quantidade de classes
+    for category in range(len(categories)):
+        VP = VN = FP = FN = 0
+        for res in results:
+            r = []
+            
+            r += [np.argmax(res[0])]
+            r += [np.argmax(res[1])]
+
+            if r[0] == category and r[1] == category:
+                VP += 1
+            elif r[0] == category and r[1] != category:
+                FN +=1
+            elif r[0] != category and r[1] == category:
+                FP +=1
+            else:
+                VN += 1
+        
+        # print("VP = %d" % VP)
+        # print("VN = %d" % VN)
+        # print("FP = %d" % FP)
+        # print("FN = %d" % FN)
+        
+        if score_mode == 'macro':
+            # Evitar divisão por zero
+            if VP + FP == 0:
+                precision = 0
+            else:
+                precision = VP / (VP + FP)
+            if VP + FN == 0:
+                recall = 0
+            else:
+                recall = VP / (VP + FN)
+            
+            all_precision += [precision]
+            all_recall += [recall]
+        else:
+            VPac += VP
+            VNac += VN
+            FPac += FP
+            FNac += FN
+
+    if score_mode == 'micro':
+        precision = VPac / (VPac + FPac)
+        recall = VPac / (VPac + FNac)
+    else: # macro
+        precision = np.mean(all_precision)
+        recall = np.mean(all_recall)
+
+    fscore = (1.0 + beta**2) * (precision * recall) / ((beta**2 * precision) + recall)
+
+    return fscore
+
 def main():
     parser = argparse.ArgumentParser(description="Neural network")
 
@@ -173,7 +313,7 @@ def main():
                         help="name of the file with the structure of the neural network")
     
     parser.add_argument('-d', "--dataset", required=True, type=str,
-                        help="name of the file with the dataset to train the neural network")
+                        help="{wine | pima | iono | <complete path to file>}")
 
     parser.add_argument('-w', "--initial_weights", type=str, default=None,
                         help="name of the file with the initial_weights of the neural network")
@@ -196,22 +336,32 @@ def main():
     parser.add_argument("--drop_row", type=int, default=None, 
                         help="index of a row to be dropped (a row with the names of the attributes, for example)")
 
+    parser.add_argument("-k", "--folds_number", type=int, default=10,
+                        help="the number of folders to divide the dataset in cross-validation")
+
     args = parser.parse_args()
 
     if args.initial_weights == None: # assume que, quando não são passados pesos iniciais, o dataset é no formato de um .csv normal
-        train = create_train_set(args.dataset, args.predicted_index, None, None)
-        s = create_network_structure(args.network_structure, train) # aqui o número de neurônios da primeira camada é calculado automaticamente, com base no número de atributos do dataset
-        w = create_initial_weights(s)
+        if args.dataset == 'wine':
+            dataset = 'wine'
+            dataset_file = 'datasets/wine.data'
+        elif args.dataset == 'pima':
+            dataset = 'pima'
+            dataset_file = 'datasets/pima.tsv'
+        elif args.dataset == 'iono':
+            dataset = 'iono'
+            dataset_file = 'datasets/ionosphere.data'
+        train = cross_validation(dataset_file, args.predicted_index, args.folds_number, None, None, args.standard_normalization, args.network_structure, args.epsilon, dataset)
+
     else: # caso contrário, o dataset está no formato da descrição do trabalho
         s, w, train = create_neural_network(args.network_structure, args.initial_weights, args.dataset) # aquio o número de neurônios da primeira camada é de acordo com o .txt, pra ficar de acordo com os exemplos deles
-
-    print_network_parameters(s, w, train)
-    network = nn.NeuralNetwork(s, w, args.epsilon)
-    network.backpropagation(train)
-    network.print_network()
-    if(args.numerical_verification):
-        numerical_gradients = network.compute_numerical_verification(train)
-        network.print_numerical_verification(numerical_gradients)
+        print_network_parameters(s, w, train)
+        network = nn.NeuralNetwork(s, w, args.epsilon)
+        network.backpropagation(train)
+        network.print_network()
+        if(args.numerical_verification):
+            numerical_gradients = network.compute_numerical_verification(train)
+            network.print_numerical_verification(numerical_gradients)
 
 if __name__ == "__main__":
     main()
