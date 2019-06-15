@@ -4,6 +4,21 @@ import numpy as np
 import pandas as pd
 from random import uniform
 
+from sklearn import preprocessing
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import StandardScaler
+
+def minmax_normalize(instances):
+    scaler = MinMaxScaler()
+    scaler.fit(instances)
+    print(scaler.data_max_)
+    return scaler.transform(instances)
+
+def standard_normalize(instances):
+    scaler = StandardScaler()
+    scaler.fit(instances)
+    return scaler.transform(instances)
+
 def create_neural_network(network, weights, dataset):
     with open(network) as network:
         lambda_val = float(network.readline().split()[0])
@@ -105,11 +120,21 @@ def create_train_set(dataset, predicted_index, drop_col, drop_row):
     x = data.drop(columns=[predicted_index])
     y = data.drop(columns=[ c for c in range(len(data.columns)) if c!=predicted_index ])
     train = []
+    instances_atributes = []
+    for i in range(len(data)):
+        instances_atributes.append(x.iloc[i, : ].tolist())
+
+    if standard_normalize:
+        normalized_instances = standard_normalize(instances_atributes)
+    else:
+        normalized_instances = minmax_normalize(instances_atributes)
+
     for i in range(len(data)):
         instance = []
-        instance.append(x.iloc[i, : ].tolist())
+        instance.append(normalized_instances[i].tolist())
         instance.append(y.iloc[i, : ].tolist())
         train.append(instance)
+
     return train
 
 def create_network_structure(network, train):
@@ -141,7 +166,6 @@ def create_initial_weights(s):
         w.append(layer)
     return w
 
-
 def main():
     parser = argparse.ArgumentParser(description="Neural network")
 
@@ -156,6 +180,9 @@ def main():
 
     parser.add_argument("-v", "--numerical_verification", type=bool, default=False, 
                         help="execute the numerical verification (True or False)")
+
+    parser.add_argument("-s", "--standard_normalization", type=bool, default=False, 
+                        help="Normalize datasets using StandardScaler. If false, MinMaxScaler is used instead")
 
     parser.add_argument("-e", "--epsilon", type=float, default=0.000001, 
                         help="epsilon for the numerical verification")
