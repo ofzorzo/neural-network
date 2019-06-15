@@ -24,7 +24,8 @@ class NeuralNetwork:
         self.deltas = self.init_activations()
         self.layers = len(self.struct['neurons'])
         self.alpha = 0.8
-        self.max_iterations = 30
+        self.beta = 0.9
+        self.max_iterations = 50
         self.batch_size = 10
         self.thetas_numerical = copy.deepcopy(self.thetas)
         self.a_numerical = copy.deepcopy(self.a)        
@@ -123,6 +124,7 @@ class NeuralNetwork:
             itera+=1
             print ("Iteration " + str(itera) + ":") 
             Grad = [ [] for i in range(self.layers - 1)] # gradiente acumulado dos exemplos
+            Grad_total = [ [] for i in range(self.layers - 1)] # gradiente acumulado dos exemplos
             num_samples = 0
             for sample in train:
                 predicted = self.propagate(sample[0])
@@ -138,6 +140,8 @@ class NeuralNetwork:
                 for k in range(self.layers-2, -1, -1):
                     grad_inp[k] = self.deltas[k+1] * self.a[k].transpose()
                     #acumula gradiente
+                    if len(Grad_total[k]) == 0: # primeiro exemplo
+                        Grad_total[k] = np.zeros(np.shape(grad_inp[k]))
                     if len(Grad[k]) == 0: # primeiro exemplo
                         Grad[k] = grad_inp[k]
                     else:
@@ -154,10 +158,11 @@ class NeuralNetwork:
                         Grad[k] = (1/len(train)) * np.array([Grad[k][i] + P[i] for i in range(len(P))])
                     
                     for k in range(self.layers-2, -1, -1):
-                        self.thetas[k] = np.matrix(self.thetas[k]) - np.matrix(self.alpha * Grad[k])
+                        Grad_total[k] = self.beta * np.matrix(Grad_total[k]) + np.matrix(Grad[k])
+                        self.thetas[k] = np.matrix(self.thetas[k]) - np.matrix(self.alpha * Grad_total[k])
+                        # self.thetas[k] = np.matrix(self.thetas[k]) - np.matrix(self.alpha * Grad[k])
 
                     Grad = [ [] for i in range(self.layers - 1)] # gradiente acumulado dos exemplos
-
                     num_samples = 0
 
             print("\n--------------------------------------------")
