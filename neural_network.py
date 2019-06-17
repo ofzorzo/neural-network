@@ -17,7 +17,7 @@ def element_wise_mult(m1, m2):
 
 
 class NeuralNetwork:
-    def __init__(self, struct, weights, epsilon):
+    def __init__(self, struct, weights, epsilon, max_iterations):
         self.thetas = weights
         self.struct = struct
         self.a = self.init_activations()
@@ -25,7 +25,7 @@ class NeuralNetwork:
         self.layers = len(self.struct['neurons'])
         self.alpha = 0.8
         self.beta = 0.9
-        self.max_iterations = 50
+        self.max_iterations = max_iterations
         self.batch_size = 10
         self.thetas_numerical = copy.deepcopy(self.thetas)
         self.a_numerical = copy.deepcopy(self.a)        
@@ -265,3 +265,26 @@ class NeuralNetwork:
             print("")
         print("")
         print("--------------------------------------------")
+    
+    def output_numerical_verification(self, numerical_gradients, filename):
+        f = open(filename, "w")
+        first_layer = True
+        for k in range(0, len(numerical_gradients)):
+            if first_layer:
+                first_layer = False
+            else:
+                f.write("\n")
+            first_neuron = True
+            for i in range(0, len(numerical_gradients[k])):
+                if first_neuron:
+                    first_neuron = False
+                else:
+                    f.write("; ")
+                first_weight = True
+                for j in range(0, numerical_gradients[k][i].size):
+                    if first_weight:
+                        f.write("{:.5f}".format(numerical_gradients[k][i, j]))
+                        first_weight = False
+                    else:
+                        f.write(", " + "{:.5f}".format(numerical_gradients[k][i, j]))                    
+        f.close()

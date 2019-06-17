@@ -1,4 +1,5 @@
 import argparse
+import datetime
 import neural_network as nn
 import numpy as np
 import pandas as pd
@@ -179,7 +180,7 @@ def create_initial_weights(s):
         w.append(layer)
     return w
 
-def cross_validation(dataset_file, predictionIndex, k, drop_col, drop_row, standard_normalization, network_structure, epsilon, dataset):
+def cross_validation(dataset_file, predictionIndex, k, drop_col, drop_row, standard_normalization, network_structure, epsilon, dataset, max_iterations):
     if dataset == 'pima':
         data = pd.read_csv(dataset_file, delimiter='\t', header=None)
     else:
@@ -228,7 +229,7 @@ def cross_validation(dataset_file, predictionIndex, k, drop_col, drop_row, stand
         s = create_network_structure(network_structure, train) # aqui o número de neurônios da primeira camada é calculado automaticamente, com base no número de atributos do dataset
         w = create_initial_weights(s)
 
-        network = nn.NeuralNetwork(s, w, epsilon)
+        network = nn.NeuralNetwork(s, w, epsilon, max_iterations)
         network.backpropagation(train)
         
         # classifica cada instancia usando o ensemble que acabou de aprender
@@ -334,6 +335,9 @@ def main():
 
     parser.add_argument("-k", "--folds_number", type=int, default=10,
                         help="the number of folders to divide the dataset in cross-validation")
+    
+    parser.add_argument("-i", "--max_iterations", type=int, default=1,
+                        help="maximum number of times the backpropagation can be executed before being stopped")
 
     args = parser.parse_args()
 
@@ -350,17 +354,21 @@ def main():
         else:
             print("Esse dataset não está configurado")
             exit()
-        train = cross_validation(dataset_file, args.predicted_index, args.folds_number, None, None, args.standard_normalization, args.network_structure, args.epsilon, dataset)
+        train = cross_validation(dataset_file, args.predicted_index, args.folds_number, None, None, args.standard_normalization, args.network_structure, args.epsilon, dataset, args.max_iterations)
 
     else: # caso contrário, o dataset está no formato da descrição do trabalho
         s, w, train = create_neural_network(args.network_structure, args.initial_weights, args.dataset) # aquio o número de neurônios da primeira camada é de acordo com o .txt, pra ficar de acordo com os exemplos deles
         print_network_parameters(s, w, train)
-        network = nn.NeuralNetwork(s, w, args.epsilon)
+        network = nn.NeuralNetwork(s, w, args.epsilon, args.max_iterations)
         network.backpropagation_with_prints(train)
         network.print_network()
+        date = datetime.datetime.now()
+        date = date.strftime("%d-%m-%Y_%H-%M-%S")
+        print(date)
         if(args.numerical_verification):
             numerical_gradients = network.compute_numerical_verification(train)
             network.print_numerical_verification(numerical_gradients)
+            network.output_numerical_verification(numerical_gradients, "output/"+date+"_numerical_verification.txt")
 
 if __name__ == "__main__":
     main()
