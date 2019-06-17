@@ -43,7 +43,7 @@ class NeuralNetwork:
         else:
             # realiza o backpropagation até atingir o limite máximo de iterações ou até os thetas pararem
             # de mudar
-            print(i)
+            #print(i)
             return i >= self.max_iterations or np.array_equal(self.thetas, prev_thetas)
 
     # Considera um conjunto de treinamento formado por uma lista de pares do tipo:
@@ -287,4 +287,27 @@ class NeuralNetwork:
                         first_weight = False
                     else:
                         f.write(", " + "{:.5f}".format(numerical_gradients[k][i, j]))                    
+        f.close()
+    
+    def output_backpropagation(self, gradients, filename):
+        f = open(filename, "w")
+        first_layer = True
+        for layer in range(0, len(gradients)):
+            if first_layer:
+                first_layer = False
+            else:
+                f.write("\n")
+            first_neuron = True
+            for next in range(0, len(gradients[layer])): #escolhe linha da matriz, que representa o neuronio onde os pesos da linha vão chegar
+                if first_neuron:
+                    first_neuron = False
+                else:
+                    f.write("; ")
+                first_weight = True
+                for weight in range(0, len(gradients[layer][next][0])):
+                    if first_weight:
+                        f.write( "{:.5f}".format(gradients[layer][next][0][weight]))
+                        first_weight = False
+                    else:    
+                        f.write( ", " + "{:.5f}".format(gradients[layer][next][0][weight]))
         f.close()

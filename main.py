@@ -356,15 +356,15 @@ def main():
             exit()
         train = cross_validation(dataset_file, args.predicted_index, args.folds_number, None, None, args.standard_normalization, args.network_structure, args.epsilon, dataset, args.max_iterations)
 
-    else: # caso contrário, o dataset está no formato da descrição do trabalho
+    else: # caso contrário, o dataset está no formato da descrição do trabalho        
+        date = datetime.datetime.now()
+        date = date.strftime("%d-%m-%Y_%H-%M-%S")
         s, w, train = create_neural_network(args.network_structure, args.initial_weights, args.dataset) # aquio o número de neurônios da primeira camada é de acordo com o .txt, pra ficar de acordo com os exemplos deles
         print_network_parameters(s, w, train)
         network = nn.NeuralNetwork(s, w, args.epsilon, args.max_iterations)
-        network.backpropagation_with_prints(train)
+        backpropagation_gradients = network.backpropagation_with_prints(train)
+        network.output_backpropagation(backpropagation_gradients, "output/"+date+"_backpropagation.txt")
         network.print_network()
-        date = datetime.datetime.now()
-        date = date.strftime("%d-%m-%Y_%H-%M-%S")
-        print(date)
         if(args.numerical_verification):
             numerical_gradients = network.compute_numerical_verification(train)
             network.print_numerical_verification(numerical_gradients)
