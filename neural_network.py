@@ -16,6 +16,7 @@ def element_wise_mult(m1, m2):
         raise Exception ("Matrix must be the same shape to perform element-wise multiplication")
 
 
+
 class NeuralNetwork:
     def __init__(self, struct, weights, epsilon, max_iterations):
         self.thetas = weights
@@ -23,7 +24,7 @@ class NeuralNetwork:
         self.a = self.init_activations()
         self.deltas = self.init_activations()
         self.layers = len(self.struct['neurons'])
-        self.alpha = 0.8
+        self.alpha = 0.1
         self.beta = 0.9
         self.max_iterations = max_iterations
         self.batch_size = 10
@@ -46,6 +47,21 @@ class NeuralNetwork:
             #print(i)
             return i >= self.max_iterations or np.array_equal(self.thetas, prev_thetas)
 
+    def cost_function(self, train):
+        J = 0
+        for sample in train:
+            f_x = self.propagate(sample[0])
+            y = sample[1]
+            J_i = [-y[i] * np.log(f_x[i]) - (1 - y[i]) * np.log(1-f_x[i]) for i in range(len(f_x))]
+            J += np.sum(J_i)
+        J = J / len(train)
+        S = 0
+        for layer in range(len(self.thetas)):
+            for row in range(len(self.thetas[layer])):
+                for col in range(len(self.thetas[layer][row].transpose())):
+                    S+= (self.thetas[layer][row, col]**2)
+        S = (self.struct['lambda'] / (2 * len(train))) * S
+        return int(S) + J
     # Considera um conjunto de treinamento formado por uma lista de pares do tipo:
     # (entradas, saídas esperadas), onde ambos os elementos são listas de valores inteiros
     def backpropagation_with_prints(self, train):
@@ -123,6 +139,7 @@ class NeuralNetwork:
             prev_theta = self.thetas[:] # copia por valor a matriz dos thetas
             itera+=1
             print ("Iteration " + str(itera) + ":") 
+            print ("Init cost = " + str(self.cost_function(train)))
             Grad = [ [] for i in range(self.layers - 1)] # gradiente acumulado dos exemplos
             Grad_total = [ [] for i in range(self.layers - 1)] # gradiente acumulado dos exemplos
             num_samples = 0
