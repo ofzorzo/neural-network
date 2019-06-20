@@ -322,10 +322,10 @@ class NeuralNetwork:
                 else:
                     f.write("; ")
                 first_weight = True
-                for weight in range(0, len(gradients[layer][next][0])):
+                for weight in range(0, gradients[layer][next].size):
                     if first_weight:
-                        f.write( "{:.5f}".format(gradients[layer][next][0][weight]))
+                        f.write( "{:.5f}".format(gradients[layer][next].item(weight)) )
                         first_weight = False
                     else:    
-                        f.write( ", " + "{:.5f}".format(gradients[layer][next][0][weight]))
+                        f.write( ", " + "{:.5f}".format(gradients[layer][next].item(weight)) )
         f.close()
