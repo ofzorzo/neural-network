@@ -27,11 +27,7 @@ class NeuralNetwork:
         self.alpha = 0.8
         self.beta = 0.9
         self.max_iterations = max_iterations
-<<<<<<< HEAD
-        self.batch_size = 16
-=======
         self.batch_size = 32
->>>>>>> 5fe6d3b78c0f67405a008dddd40db2ba80cc7612
         self.thetas_numerical = copy.deepcopy(self.thetas)
         self.a_numerical = copy.deepcopy(self.a)        
         self.epsilon = epsilon
