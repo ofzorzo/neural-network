@@ -27,7 +27,7 @@ class NeuralNetwork:
         self.alpha = 0.1
         self.beta = 0.9
         self.max_iterations = max_iterations
-        self.batch_size = 10
+        self.batch_size = 32
         self.thetas_numerical = copy.deepcopy(self.thetas)
         self.a_numerical = copy.deepcopy(self.a)        
         self.epsilon = epsilon
@@ -132,14 +132,15 @@ class NeuralNetwork:
     
     # Considera um conjunto de treinamento formado por uma lista de pares do tipo:
     # (entradas, saídas esperadas), onde ambos os elementos são listas de valores inteiros
-    def backpropagation(self, train):
+    def backpropagation(self, train, test):
         itera = 0
         prev_theta = None
         while (not self.stop_condition(itera, prev_theta)):
             prev_theta = self.thetas[:] # copia por valor a matriz dos thetas
             itera+=1
             print ("Iteration " + str(itera) + ":") 
-            print ("Init cost = " + str(self.cost_function(train)))
+            print ("Train cost = " + str(self.cost_function(train)))
+            print ("Test cost = " + str(self.cost_function(test)))
             Grad = [ [] for i in range(self.layers - 1)] # gradiente acumulado dos exemplos
             Grad_total = [ [] for i in range(self.layers - 1)] # gradiente acumulado dos exemplos
             num_samples = 0
