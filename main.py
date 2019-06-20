@@ -232,11 +232,12 @@ def cross_validation(dataset_file, predictionIndex, k, drop_col, drop_row, stand
         
         print("k-fold #%d" % test_fold_index)
         train = create_train_set(training_data, predictionIndex, drop_col, drop_row, standard_normalization, dataset)
+        test = create_train_set(testing_data, predictionIndex, drop_col, drop_row, standard_normalization, dataset)
         s = create_network_structure(network_structure, train) # aqui o número de neurônios da primeira camada é calculado automaticamente, com base no número de atributos do dataset
         w = create_initial_weights(s)
 
         network = nn.NeuralNetwork(s, w, epsilon, max_iterations)
-        network.backpropagation(train)
+        network.backpropagation(train, test)
         
         # classifica cada instancia usando o ensemble que acabou de aprender
         results = []
