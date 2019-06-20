@@ -24,10 +24,10 @@ class NeuralNetwork:
         self.a = self.init_activations()
         self.deltas = self.init_activations()
         self.layers = len(self.struct['neurons'])
-        self.alpha = 0.1
+        self.alpha = 0.8
         self.beta = 0.9
         self.max_iterations = max_iterations
-        self.batch_size = 10
+        self.batch_size = 16
         self.thetas_numerical = copy.deepcopy(self.thetas)
         self.a_numerical = copy.deepcopy(self.a)        
         self.epsilon = epsilon

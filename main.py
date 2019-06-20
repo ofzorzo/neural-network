@@ -137,6 +137,12 @@ def create_train_set(data, predicted_index, drop_col, drop_row, standard_normali
         elif dataset == 'pima':
             expected_output = np.zeros(2)
             expected_output[y.iloc[i, : ]] = 1
+        elif dataset == 'wdbc':
+            expected_output = np.zeros(2)
+            if y.iloc[i, : ].tolist()[0] == 'B':
+                expected_output[0] = 1            
+            else:
+                expected_output[1] = 1
         elif dataset == 'iono':
             expected_output = np.zeros(2)
             if y.iloc[i, : ].tolist()[0] == 'b':
@@ -351,6 +357,9 @@ def main():
         elif args.dataset == 'iono':
             dataset = 'iono'
             dataset_file = 'datasets/ionosphere.data'
+        elif args.dataset == 'wdbc':
+            dataset = 'wdbc'
+            dataset_file = 'datasets/wdbc.data'
         else:
             print("Esse dataset não está configurado")
             exit()
