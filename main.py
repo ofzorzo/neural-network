@@ -60,7 +60,8 @@ def print_network_parameters(s, w, train):
     print("Regularization parameter (lambda)=" + "{:.3f}".format(s["lambda"]))
     print("")
     print(
-        "Initializing network with the following structure of neurons per layer: [", end=""
+        "Initializing network with the following structure of neurons per layer: [",
+        end="",
     )
     first = True
     for n in s["neurons"]:
@@ -165,9 +166,9 @@ def create_network_structure(network, train):
     with open(network) as network:
         lambda_val = float(network.readline().split()[0])
         neurons = []
-        neurons.append(
-            len(train[0][0])
-        )  # considera que a primeira camada tem número de neurônios igual a número de atributos do dataset (menos o atributo a ser predito)
+        # considera que a primeira camada tem número de neurônios igual
+        # a número de atributos do dataset (menos o atributo a ser predito):
+        neurons.append(len(train[0][0]))
         for line in network:
             neurons.append(int(line))
         s = {"lambda": lambda_val, "neurons": neurons}
@@ -228,7 +229,8 @@ def cross_validation(
                 sample.index
             )
 
-    # adicionando as instâncias que sobraram por categoria uma em cada fold (pra não ficar muito desparelha a quantidade total de instancias)
+    # adicionando as instâncias que sobraram por categoria,
+    # uma em cada fold (pra não ficar muito desparelha a quantidade total de instancias):
     instances_rest = pd.DataFrame()
     for category, data in data_split_per_category.items():
         instances_rest = pd.concat([instances_rest, data])
@@ -263,9 +265,9 @@ def cross_validation(
             standard_normalization,
             dataset,
         )
-        s = create_network_structure(
-            network_structure, train
-        )  # aqui o número de neurônios da primeira camada é calculado automaticamente, com base no número de atributos do dataset
+        # aqui o número de neurônios da primeira camada é calculado automaticamente,
+        # com base no número de atributos do dataset:
+        s = create_network_structure(network_structure, train)
         w = create_initial_weights(s)
 
         network = nn.NeuralNetwork(s, w, epsilon, max_iterations)
@@ -292,17 +294,13 @@ def cross_validation(
 
 
 def Fmeasure(results, categories, beta=1, score_mode="micro"):
-    VPac = (
-        VNac
-    ) = (
-        FPac
-    ) = (
-        FNac
-    ) = 0  # valores acumulados para todas as classes, a ser utilizado no caso de score_mode = micro média
+    # valores acumulados para todas as classes,
+    # a ser utilizado no caso de score_mode = micro média:
+    VPac = VNac = FPac = FNac = 0
     all_precision = []
-    all_recall = (
-        []
-    )  # resultados de precisão e recall para cada classe, a ser utilizado no caso de score_mode = macro média
+    # resultados de precisão e recall para cada classe,
+    # a ser utilizado no caso de score_mode = macro média:
+    all_recall = []
     # Tratamento multiclasse realizado independentemente da quantidade de classes
     for category in range(len(categories)):
         VP = VN = FP = FN = 0
@@ -319,11 +317,6 @@ def Fmeasure(results, categories, beta=1, score_mode="micro"):
                 FP += 1
             else:
                 VN += 1
-
-        # print("VP = %d" % VP)
-        # print("VN = %d" % VN)
-        # print("FP = %d" % FP)
-        # print("FN = %d" % FN)
 
         if score_mode == "macro":
             # Evitar divisão por zero
@@ -450,7 +443,8 @@ def main():
     args = parser.parse_args()
 
     if args.initial_weights is None:
-        # assume que, quando não são passados pesos iniciais, o dataset é no formato de um .csv normal
+        # assume que, quando não são passados pesos iniciais,
+        # o dataset é no formato de um .csv normal
         if args.dataset == "wine":
             dataset = "wine"
             dataset_file = "datasets/wine.data"
@@ -482,9 +476,11 @@ def main():
     else:  # caso contrário, o dataset está no formato da descrição do trabalho
         date = datetime.datetime.now()
         date = date.strftime("%d-%m-%Y_%H-%M-%S")
+        # o número de neurônios da primeira camada é de acordo com o .txt,
+        # pra ficar de acordo com os exemplos deles:
         s, w, train = create_neural_network(
             args.network_structure, args.initial_weights, args.dataset
-        )  # aqui o o número de neurônios da primeira camada é de acordo com o .txt, pra ficar de acordo com os exemplos deles
+        )
         print_network_parameters(s, w, train)
         network = nn.NeuralNetwork(s, w, args.epsilon, 1)
         backpropagation_gradients = network.backpropagation_with_prints(train)

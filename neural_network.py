@@ -44,9 +44,8 @@ class NeuralNetwork:
         return activations
 
     def stop_condition(self, i, prev_thetas):
-        if (
-            i == 0
-        ):  # primeira iteração, precisa dessa condição pois o valor de prev_theta será None
+        # primeira iteração, precisa dessa condição pois o valor de prev_theta será None:
+        if i == 0:
             return False
         else:
             # realiza o backpropagation até atingir o limite máximo de iterações ou até os thetas pararem
@@ -183,12 +182,9 @@ class NeuralNetwork:
             print("Iteration " + str(itera) + ":")
             print("Train cost = " + str(self.cost_function(train)))
             print("Test cost = " + str(self.cost_function(test)))
-            Grad = [
-                [] for i in range(self.layers - 1)
-            ]  # gradiente acumulado dos exemplos
-            Grad_total = [
-                [] for i in range(self.layers - 1)
-            ]  # gradiente acumulado dos exemplos
+            Grad = [[] for _ in range(self.layers - 1)]
+            # gradiente acumulado dos exemplos:
+            Grad_total = [[] for _ in range(self.layers - 1)]
             num_samples = 0
             for sample in train:
                 predicted = self.propagate(sample[0])
@@ -246,23 +242,21 @@ class NeuralNetwork:
     # obtém saídas correspondentes a uma entrada
     def propagate(self, instance):
         # adiciona bias
-        self.a[0] = np.matrix(
-            [1] + instance
-        ).transpose()  # valores de entrada para a camada sendo
-        # a entrada da rede na primeira camada ou
-        # a ativação das camadas anteriores para
-        # as demais camadas.
-        for layer in range(
-            len(self.thetas) - 1
-        ):  # para cada matriz de pesos theta entre duas camadas
-            self.a[layer + 1] = g(self.thetas[layer] * self.a[layer])
-            self.a[layer + 1] = np.matrix(
-                [[1]] + self.a[layer + 1].tolist()
-            )  # adiciona neurônio de bias
+        self.a[0] = np.matrix([1] + instance).transpose()   # valores de entrada para a camada sendo
+                                                            # a entrada da rede na primeira camada ou
+                                                            # a ativação das camadas anteriores para
+                                                            # as demais camadas.
 
+        # para cada matriz de pesos theta entre duas camadas:
+        for layer in range(len(self.thetas) - 1):
+            self.a[layer + 1] = g(self.thetas[layer] * self.a[layer])
+            # adiciona neurônio de bias:
+            self.a[layer + 1] = np.matrix([[1]] + self.a[layer + 1].tolist())
+
+        # (-2) pois existe uma tabela de thetas a menos que camada
         self.a[self.layers - 1] = g(
             self.thetas[self.layers - 2] * self.a[self.layers - 2]
-        )  # (-2) pois existe uma tabela de thetas a menos que camada
+        )
         return self.a[self.layers - 1]
 
     def compute_numerical_verification(self, train):
@@ -273,10 +267,8 @@ class NeuralNetwork:
         )
         gradients = copy.deepcopy(self.thetas_numerical)
         for k in range(self.layers - 2, -1, -1):
-            # print(self.thetas_numerical[k])
             for i in range(0, len(self.thetas_numerical[k])):
                 for j in range(0, self.thetas_numerical[k][i].size):
-                    # print(self.thetas_numerical[k][i,j])
                     Jp = 0
                     Jn = 0
                     reg_p, reg_n = self.regularized_terms(k, i, j)
@@ -313,13 +305,9 @@ class NeuralNetwork:
         reg_p = 0
         reg_n = 0
         for k2 in range(self.layers - 2, -1, -1):
-            # print(self.thetas_numerical[k])
             for i2 in range(0, len(self.thetas_numerical[k2])):
-                # print("termo ignorado = " + str(self.thetas_numerical[k2][i2,0]))
-                for j2 in range(
-                    1, self.thetas_numerical[k2][i2].size
-                ):  # começa em 1 para não somar os pesos de bias
-                    # print("\ttermo atual = " + str(self.thetas_numerical[k2][i2,j2]))
+                # começa em 1 para não somar os pesos de bias:
+                for j2 in range(1, self.thetas_numerical[k2][i2].size):
                     if k2 == k and i2 == i and j2 == j:
                         reg_n = reg_n + pow(
                             self.thetas_numerical[k2][i2, j2] - self.epsilon, 2
@@ -420,9 +408,9 @@ class NeuralNetwork:
                 else:
                     f.write("\n")
                 first_neuron = True
-                for next in range(
-                    0, len(gradients[layer])
-                ):  # escolhe linha da matriz, que representa o neuronio onde os pesos da linha vão chegar
+                # escolhe linha da matriz que representa o neuronio
+                # onde os pesos da linha vão chegar:
+                for next in range(0, len(gradients[layer])):
                     if first_neuron:
                         first_neuron = False
                     else:
