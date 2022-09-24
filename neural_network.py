@@ -1,5 +1,6 @@
 import copy
 import math
+import os
 
 import numpy as np
 
@@ -43,7 +44,9 @@ class NeuralNetwork:
         return activations
 
     def stop_condition(self, i, prev_thetas):
-        if i == 0:  # primeira iteração, precisa dessa condição pois o valor de prev_theta será None
+        if (
+            i == 0
+        ):  # primeira iteração, precisa dessa condição pois o valor de prev_theta será None
             return False
         else:
             # realiza o backpropagation até atingir o limite máximo de iterações ou até os thetas pararem
@@ -89,7 +92,10 @@ class NeuralNetwork:
                 print("")
                 for i in range(len(self.a)):
                     print(
-                        "Activation of layer " + str(i) + ":\n" + str(self.a[i].tolist())
+                        "Activation of layer "
+                        + str(i)
+                        + ":\n"
+                        + str(self.a[i].tolist())
                     )
                 print("")
                 print("Predicted = \n" + str(predicted))
@@ -355,7 +361,11 @@ class NeuralNetwork:
         print("\n\nWeights : ")
         for theta in range(len(self.thetas)):
             print(
-                "Weights between layer " + str(theta) + " and layer " + str(theta + 1) + ":"
+                "Weights between layer "
+                + str(theta)
+                + " and layer "
+                + str(theta + 1)
+                + ":"
             )
             print(self.thetas[theta])
 
@@ -363,7 +373,7 @@ class NeuralNetwork:
 
     def print_numerical_verification(self, numerical_gradients):
         for k in range(0, len(numerical_gradients)):
-            print("\tGradiente numerico de Theta" + str(k + 1) + ":")
+            print("\tNumerical gradient of Theta" + str(k + 1) + ":")
             for i in range(0, len(numerical_gradients[k])):
                 print("\t\t", end="")
                 for j in range(0, numerical_gradients[k][i].size):
@@ -374,51 +384,58 @@ class NeuralNetwork:
         print("--------------------------------------------")
 
     def output_numerical_verification(self, numerical_gradients, filename):
-        f = open(filename, "w")
-        first_layer = True
-        for k in range(0, len(numerical_gradients)):
-            if first_layer:
-                first_layer = False
-            else:
-                f.write("\n")
-            first_neuron = True
-            for i in range(0, len(numerical_gradients[k])):
-                if first_neuron:
-                    first_neuron = False
+        if not os.path.isdir("output"):
+            os.mkdir("output")
+        with open(filename, "w") as f:
+            first_layer = True
+            for k in range(0, len(numerical_gradients)):
+                if first_layer:
+                    first_layer = False
                 else:
-                    f.write("; ")
-                first_weight = True
-                for j in range(0, numerical_gradients[k][i].size):
-                    if first_weight:
-                        f.write("{:.5f}".format(numerical_gradients[k][i, j]))
-                        first_weight = False
+                    f.write("\n")
+                first_neuron = True
+                for i in range(0, len(numerical_gradients[k])):
+                    if first_neuron:
+                        first_neuron = False
                     else:
-                        f.write(", " + "{:.5f}".format(numerical_gradients[k][i, j]))
-        f.close()
+                        f.write("; ")
+                    first_weight = True
+                    for j in range(0, numerical_gradients[k][i].size):
+                        if first_weight:
+                            f.write("{:.5f}".format(numerical_gradients[k][i, j]))
+                            first_weight = False
+                        else:
+                            f.write(
+                                ", " + "{:.5f}".format(numerical_gradients[k][i, j])
+                            )
 
     def output_backpropagation(self, gradients, filename):
-        f = open(filename, "w")
-        first_layer = True
-        for layer in range(0, len(gradients)):
-            if first_layer:
-                first_layer = False
-            else:
-                f.write("\n")
-            first_neuron = True
-            for next in range(
-                0, len(gradients[layer])
-            ):  # escolhe linha da matriz, que representa o neuronio onde os pesos da linha vão chegar
-                if first_neuron:
-                    first_neuron = False
+        if not os.path.isdir("output"):
+            os.mkdir("output")
+        with open(filename, "w") as f:
+            first_layer = True
+            for layer in range(0, len(gradients)):
+                if first_layer:
+                    first_layer = False
                 else:
-                    f.write("; ")
-                first_weight = True
-                for weight in range(0, gradients[layer][next].size):
-                    if first_weight:
-                        f.write("{:.5f}".format(gradients[layer][next].item(weight)))
-                        first_weight = False
+                    f.write("\n")
+                first_neuron = True
+                for next in range(
+                    0, len(gradients[layer])
+                ):  # escolhe linha da matriz, que representa o neuronio onde os pesos da linha vão chegar
+                    if first_neuron:
+                        first_neuron = False
                     else:
-                        f.write(
-                            ", " + "{:.5f}".format(gradients[layer][next].item(weight))
-                        )
-        f.close()
+                        f.write("; ")
+                    first_weight = True
+                    for weight in range(0, gradients[layer][next].size):
+                        if first_weight:
+                            f.write(
+                                "{:.5f}".format(gradients[layer][next].item(weight))
+                            )
+                            first_weight = False
+                        else:
+                            f.write(
+                                ", "
+                                + "{:.5f}".format(gradients[layer][next].item(weight))
+                            )
