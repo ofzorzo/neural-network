@@ -1,7 +1,7 @@
 # neural-network
 This project consists of a neural network implemented from scratch for UFRGS' machine learning course. The neural network is trained with backpropagation and its structure can be personalized by the user.
 
-The neural network was trained with four fixed datasets (used to predict data from the ionosphere, pima, wdbc and wine) and its performance was analyzed.
+The neural network was trained with four fixed datasets (ionosphere, pima, wdbc and wine) and its performance was analyzed for each case.
 
 ## Installation
 
