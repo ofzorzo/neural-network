@@ -484,7 +484,7 @@ def main():
         date = date.strftime("%d-%m-%Y_%H-%M-%S")
         s, w, train = create_neural_network(
             args.network_structure, args.initial_weights, args.dataset
-        )  # aquio o número de neurônios da primeira camada é de acordo com o .txt, pra ficar de acordo com os exemplos deles
+        )  # aqui o o número de neurônios da primeira camada é de acordo com o .txt, pra ficar de acordo com os exemplos deles
         print_network_parameters(s, w, train)
         network = nn.NeuralNetwork(s, w, args.epsilon, 1)
         backpropagation_gradients = network.backpropagation_with_prints(train)
