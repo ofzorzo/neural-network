@@ -3,16 +3,16 @@ This project consists of a neural network implemented from scratch for UFRGS' ma
 
 The neural network was trained with four fixed datasets (used to predict data from the ionosphere, pima, wdbc and wine) and its performance was analyzed.
 
-# INSTALLATION
+## Installation
 
 Poetry is used to manage the dependencies of this project. Therefore, installing it is as easy as cloning this repository and then running:
 ```
 poetry install
 ```
 
-# USAGE
+## Usage
 
-## Arbitrary datasets
+### Arbitrary datasets
 
 For arbitrary datasets, you must pass the following arguments when calling the program:
 
@@ -26,7 +26,7 @@ Besides these three mandatory arguments, there are additional optional arguments
 ```
 python main.py -n examples/network.txt -d examples/dataset.txt -w examples/initial_weights.txt
 ```
-## Analyzed datasets
+### Analyzed datasets
 
 The usage is basically the same as for arbitrary datasets. However, you can omit the `-n` argument: we included the best network structure we found for each of the four datasets and they are loaded automatically.
 
@@ -37,3 +37,6 @@ python main.py -n datasets/pima.txt -d pima -p 8 -i 100
 python main.py -n datasets/iono.txt -d iono -p 34 -i 100
 python main.py -n datasets/wdbc.txt -d wdbc -p 1 -i 100 --drop_column 0
 ```
+
+## Performance analysis
+todo
