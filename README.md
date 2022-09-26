@@ -38,7 +38,7 @@ python main.py -n examples/network.txt -d examples/dataset.txt -w examples/initi
 
 The neural network was trained with four fixed datasets ([ionosphere](https://archive.ics.uci.edu/ml/datasets/Ionosphere), [wdbc](https://archive.ics.uci.edu/ml/datasets/Breast+Cancer+Wisconsin+(Diagnostic)), [wine](https://archive.ics.uci.edu/ml/datasets/wine) and pima) and its performance was analyzed for each case.
 
-The usage is basically the same as for arbitrary datasets. The `-w` argument, however, can be omitted, since the weights are randomly initialized. Furthermore, there are additional optional arguments that can be used. You can check them out by passing the `-h` argument to the program.
+The usage is basically the same as for arbitrary datasets. The `-w` argument, however, can be omitted, since the weights are randomly initialized. Furthermore, there are additional optional arguments that can be used. You can check them out by passing the `-h` flag to the program.
 
 #### Execution example:
 ```
