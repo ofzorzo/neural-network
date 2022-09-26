@@ -24,9 +24,9 @@ The first mode uses arbitrary datasets and outputs the network's gradients found
 
 To use this mode, you must pass the following arguments when calling the program:
 
-- `-n`: file containing the structure of the neural network. The first line stores the value of the lambda parameter used for regularization and the subsequent lines store the number of neurons in each corresponding layer of the network;
-- `-d`: file containing the dataset used to train the neural network;
-- `-w`: file containing the initial weights of the neural network.
+- `-n STRUCTURE`: file containing the structure of the neural network. The first line stores the value of the lambda parameter used for regularization and the subsequent lines store the number of neurons in each corresponding layer of the network;
+- `-d DATASET`: file containing the dataset used to train the neural network;
+- `-w WEIGHTS`: file containing the initial weights of the neural network.
 
 If you wish to perform a numerical gradient checking to confirm the correctness of the backpropagation algorithm, you must pass the `-v True` argument.
 
